@@ -29,11 +29,21 @@ def validate(text):
     assert text == text.strip(), "entry must have no leading/trailing whitespace"
     assert "\n" not in text and "\r" not in text, "entry must be one line"
     assert len(text.splitlines()) == 1, "entry must be exactly one line"
+    assert all(ord(c) >= 32 and ord(c) != 127 for c in text), (
+        "entry must not contain control characters"
+    )
 
 
 def main():
     validate(ENTRY)
     data = ENTRY.encode("utf-8")
+    # The entry is pure ASCII, so its byte length must equal its char
+    # length: any accidental non-ASCII creep would change the byte count
+    # the leaderboard's Size column reports (a tie-break) without
+    # changing the char count the gate checks.
+    assert len(data) == len(ENTRY), (
+        f"byte length {len(data)} != char length {len(ENTRY)}"
+    )
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(OUTPUT_PATH, "wb") as f:
